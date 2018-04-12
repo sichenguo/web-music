@@ -1,16 +1,17 @@
 <template>
-   <scroll :data="data" 
-           class="list-view" 
-           ref="listview"
-           :listenScroll = 'listenScroll'
-           :probeType = 'probeType'
-           @scroll="scroll">
+  <scroll :data="data" 
+          class="list-view" 
+          ref="listview"
+          :listenScroll = 'listenScroll'
+          :probeType = 'probeType'
+          @scroll="scroll"
+  >
      <!-- 传入data是为了方便scroll内部进行监测  -->
     <ul>
       <li v-for="group in data" :key="group.title" class="list-group" ref="listGroup">
         <h2 class="list-group-title">{{group.title}}</h2>
         <ul>
-          <li class="list-group-item" v-for="item in group.items" :key="item.id" >
+          <li class="list-group-item" v-for="item in group.items" :key="item.id"  @click="selectItem(item)">
             <img class="avatar" v-lazy="item.avatar">
             <div class="dec">{{item.name}}</div>
           </li>
@@ -22,7 +23,9 @@
         <li v-for="(item,index) in shortcutList" 
             class="item" :key="index" 
             :data-index='index'
-            :class="{'current': currentIndex === index}">{{item}} </li>
+            :class="{'current': currentIndex === index}"
+        > {{item}}
+        </li>
       </ul>
     </div>
     <div class="list-fixed"  ref="fixed" v-show="fixedTitle" >
@@ -90,7 +93,7 @@ export default {
     diff(newVal) {
       let fixedTop = (newVal >= 0 && newVal < TITLE_HEIGHT) ? newVal - TITLE_HEIGHT : 0
       // top : fixedTop
-      if(this.fixedTop === fixedTop){
+      if(this.fixedTop === fixedTop) {
         return 
       }
       this.fixedTop === fixedTop
@@ -133,7 +136,11 @@ export default {
 		scroll(pos) {
 			// console.log(pos)
 			this.scrollY = pos.y
-		},
+    },
+    selectItem(item) {
+      // debugger
+      this.$emit('select', item)
+    },
 		_calculateHeight() {
 			this.listHeight = []
 			const list = this.$refs.listGroup
@@ -156,6 +163,7 @@ export default {
       }
       // 处理两个边缘的情况 因为 滚动事件的触发会超出所需边界，使得index需要处理
       this.scrollY = -this.listHeight[index]
+      // 使用bscroll 进行的跳转是不派发scrol事件的，需要手动更新scroll的值
 			this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0)
 		},
 	},

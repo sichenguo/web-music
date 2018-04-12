@@ -2,7 +2,7 @@
   <div ref="wrapper">
     <slot></slot>
   </div>
-</template>
+</template> 
 
 <script type="text/ecmascript-6">
 /* eslint-disable */
@@ -42,10 +42,10 @@
           }) 
         }
         if(this.listenScroll) {
-          let me = this
-          debugger
+          // let me = this
+          // debugger
           this.scroll.on('scroll', (pos) => {
-            me.$emit('scroll', pos)
+            this.$emit('scroll', pos)
           })
         }
       },

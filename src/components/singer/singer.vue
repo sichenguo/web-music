@@ -1,6 +1,7 @@
 <template>
 <div class="singer">
- <listview :data="singers"></listview> 
+  <listview :data="singers" @select="selectSinger"></listview> 
+  <router-view/>
 </div>
 </template>
 
@@ -21,6 +22,12 @@ export default {
     this._getSingerList()
   },
   methods: {
+    selectSinger(singer) {
+      // debugger
+      this.$router.push({
+        path: `/singer/${singer.id}`
+      })
+    },
     _getSingerList() {
       getSingerList().then((res) => {
         if(res.code === ERR_OK) {
@@ -68,7 +75,6 @@ export default {
       res.sort((a, b) => a.title.charCodeAt(0) - b.title.charCodeAt(0))
       return hot.concat(res)
     }
-
   },
   components: {
     Listview,
