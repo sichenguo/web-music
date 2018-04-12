@@ -25,6 +25,10 @@
             :class="{'current': currentIndex === index}">{{item}} </li>
       </ul>
     </div>
+    <div class="list-fixed"  ref="fixed" v-show="fixedTitle" >
+      <h2 class="fixed-title">{{fixedTitle}}</h2>
+    </div>
+    <loading class="loading" v-show = "!data.length"></loading>
   </scroll>
 </template>
 
@@ -32,12 +36,14 @@
 /* eslint-disable */
 import Scroll from 'base/scroll/scroll'
 import { getData } from 'common/js/dom'
+import Loading from 'base/loading/loading.vue'
 const ANCHOR_HEIGHT = 18
+const TITLE_HEIGHT = 30
 // 行高12 padding 2* 3
 export default {
 	props: {
 		data: {
-			default: [],
+      default: [],
 		},
 	},
 	created() {
@@ -50,7 +56,8 @@ export default {
 	data() {
 		return {
 			scrollY: -1,
-			currentIndex: 0,
+      currentIndex: 0,
+      diff: -1,
 		}
 	},
 	watch: {
@@ -71,21 +78,41 @@ export default {
 					let currHeight = listHeight[i]
 					let nextHeight = listHeight[i + 1]
 					if (!nextHeight || (-newY >= currHeight && -newY < nextHeight)) {
-						this.currentIndex = i
+            this.currentIndex = i
+            // debugger
+            this.diff = newY + nextHeight
+            // 用来判定相对位置 当前按页面的位置以及是否需要动画效果
 						return
 					}
 				}
 			}
-		},
+    },
+    diff(newVal) {
+      let fixedTop = (newVal >= 0 && newVal < TITLE_HEIGHT) ? newVal - TITLE_HEIGHT : 0
+      // top : fixedTop
+      if(this.fixedTop === fixedTop){
+        return 
+      }
+      this.fixedTop === fixedTop
+      // debugger
+      this.$refs.fixed.style.transform = `translate3d(0, ${fixedTop}px, 0)`
+    }
 	},
 	computed: {
 		shortcutList() {
 			console.log(this.data.map((it, index) => it.title.slice(0, 1)))
 			return this.data.map((it, index) => it.title.slice(0, 1))
-		},
+    },
+    fixedTitle() {
+      if(this.scrollY > 0) {
+        return ''
+      }
+      return this.data[this.currentIndex] ? this.data[this.currentIndex].title : ''
+    },
 	},
 	components: {
-		Scroll,
+    Scroll,
+    Loading
 	},
 	methods: {
 		onShortcutTouchStart(e) {
@@ -119,6 +146,16 @@ export default {
 			}
 		},
 		_scrollTo(index) {
+      if(!index && index !== 0) {
+        return 
+      }
+      if(index < 0) {
+        index = 0
+      }else if(index > this.listHeight.length - 2) {
+        index = this.listHeight.length - 2
+      }
+      // 处理两个边缘的情况 因为 滚动事件的触发会超出所需边界，使得index需要处理
+      this.scrollY = -this.listHeight[index]
 			this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0)
 		},
 	},
@@ -128,70 +165,72 @@ export default {
 <style scoped lang="stylus" rel="stylesheet/stylus">
 @import '~common/stylus/variable';
 
-.list-view {
-  position: relative;
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  background: $color-background;
+.list-view
+  position: relative
+  height: 100%
+  width: 100%
+  overflow: hidden
+  background: $color-background
 
-  .list-group {
-    padding-bottom: 30px;
+  .list-group
+    padding-bottom: 30px
 
-    .list-group-title {
-      height: 30px;
-      line-height: 30px;
-      padding-left: 20px;
-      font-size: $font-size-small;
-      color: $color-text-l;
-      background: $color-highlight-background;
-    }
+    .list-group-title
+      height: 30px
+      line-height: 30px
+      padding-left: 20px
+      font-size: $font-size-small
+      color: $color-text-l
+      background: $color-highlight-background
+    ul
+      .list-group-item
+        display: flex
+        align-items: center
+        padding: 20px 0 0 30px
+        .avatar
+          width: 50px
+          height: 50px
+          border-radius: 50%
+        .dec
+          margin-left: 20px
+          text-align: center
+          color: $color-text-l
+          font-size: $font-size-medium
+  .list-shortcut
+    position: absolute
+    right: 0
+    top: 50%
+    z-index: 30
+    transform: translateY(-50%)
+    width: 20px
+    padding: 20px 0
+    border-radiuus: 10px
+    text-align: center
+    background: $background-color-d
+    font-family: Helvetica
+    .item
+      padding: 3px
+      line-height: 1
+      color: $color-text-l
+      font-size: $font-size-small
+      &.current
+        color: $color-theme
+  .list-fixed
+    position: absolute
+    top: 0
+    left: 0
+    width: 100%
+    .fixed-title
+      height: 30px
+      line-height: 30px
+      padding-left: 20px
+      color:$color-text-l
+      font-size: $font-size-small
+      background: $color-highlight-background
+  .loading
+    position: absolute 
+    top: 50%
+    transform: translateY(-50%)
 
-    ul {
-      .list-group-item {
-        display: flex;
-        align-items: center;
-        padding: 20px 0 0 30px;
 
-        .avatar {
-          width: 50px;
-          height: 50px;
-          border-radius: 50%;
-        }
-
-        .dec {
-          margin-left: 20px;
-          text-align: center;
-          color: $color-text-l;
-          font-size: $font-size-medium;
-        }
-      }
-    }
-  }
-
-  .list-shortcut {
-    position: absolute;
-    right: 0;
-    top: 50%;
-    z-index: 30;
-    transform: translateY(-50%);
-    width: 20px;
-    padding: 20px 0;
-    border-radiuus: 10px;
-    text-align: center;
-    background: $background-color-d;
-    font-family: Helvetica;
-
-    .item {
-      padding: 3px;
-      line-height: 1;
-      color: $color-text-l;
-      font-size: $font-size-small;
-
-      &.current {
-        color: $color-theme;
-      }
-    }
-  }
-}
 </style>

@@ -43,6 +43,7 @@
         }
         if(this.listenScroll) {
           let me = this
+          debugger
           this.scroll.on('scroll', (pos) => {
             me.$emit('scroll', pos)
           })
